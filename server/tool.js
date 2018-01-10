@@ -9,6 +9,7 @@ var zlib = require("zlib");
 var crypto = require("crypto");
 var http = require("http");
 var https = require("https");
+var PromiseFtp = require("promise-ftp");
 var url = require("url");
 var when = require("when");
 var winston = require("winston");
@@ -17,12 +18,16 @@ var temp = require("temp");
 var spawn = require("child_process").spawn;
 var fs = require("fs");
 var path = require("path");
+var ftpConfig = require("../private/ftp-config.json");
 
 // CF won't compress MIME type "application/x-font-ttf" (the express.js default) but will compress "font/ttf".
 // https://support.cloudflare.com/hc/en-us/articles/200168396-What-will-CloudFlare-gzip-
 mime.define({"font/ttf": ["ttf"]});
 
 temp.track(true);
+
+exports.FTP_LAYER_HOME = "data/weather/";
+exports.FTP_OSCAR_HOME = "data/oscar/";
 
 /**
  * Returns a new, nicely configured winston logger.
@@ -189,6 +194,42 @@ exports.grib2json = function(args, out, err) {
     });
 
     return d.promise;
+};
+
+exports.ftpUpload = function(layers, layerHome, key) {
+    var ftp = new PromiseFtp();
+    var ftpLayer = function(layer) {
+        var layerSrc = layer.path(layerHome);
+        var layerDest = layer.path(key);
+        // ensure server directory
+        var serverDir = layerDest.lastIndexOf('/');
+        ftp.mkdir(layerDest.substr(0, serverDir), true);
+            .catch(function(e) {
+                log.info("Couldn't create directory, " + e.message ? e.message : '' + ": " + serverDir);
+                return false;
+            });
+        ftp.put(fs.createReadStream(layerSrc), layerDest)
+            .then(
+                function() {
+                    log.info("PUT " + layerDest + " successful!");
+                    return true;
+                },
+                function(e) {
+                    log.error(e.stack ? e.stack : e);
+                    return false;
+                }
+            );
+    };
+    return ftp.connect(ftpConfig)
+        .then(function (serverMessage) {
+            return when.map(layers, ftpLayer);
+        })
+        .then(function () {
+            return ftp.end();
+        })
+        .finally(function () {
+            log.info("finished pushing to FTP.");
+        })
 };
 
 /**

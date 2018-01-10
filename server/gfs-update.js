@@ -18,7 +18,7 @@
 "use strict";
 
 var argv = require("optimist")
-    .usage("Usage: $0 -g {path} -l {path} -f now|recent|{date} [-u now|{date}] [-b {hours}] [-d {num}] [-p]")
+    .usage("Usage: $0 -g {path} -l {path} -f now|recent|{date} [-u now|{date}] [-b {hours}] [-d {num}] [-p s3|ftp]")
     .demand(["g", "l"])
     .alias("g", "gribhome")
         .describe("g", "path where to save downloaded GRIB files")
@@ -34,8 +34,7 @@ var argv = require("optimist")
         .default("d", 1)
         .describe("d", "forecast depth to fetch for first cycle (default depth of '1')")
     .alias("p", "push")
-        .boolean("p")
-        .describe("p", "push updated layers to S3")
+        .describe("p", "push updated layers to amazon S3 or FTP")
     .argv;
 
 console.log("============================================================");
@@ -89,7 +88,7 @@ var servers = [
 var opt = function() {
 
     log.info("arguments: \n" +
-        util.inspect(_.pick(argv, "gribhome", "layerhome", "from", "until", "back", "_")));
+        util.inspect(_.pick(argv, "gribhome", "layerhome", "from", "until", "back", "depth", "push")));
 
     var startDate = null, endDate = null, back = null;
     if (argv.from) {
@@ -288,11 +287,6 @@ function pushLayer(layer) {
     if (!layer) {
         return null;  // no layer, so nothing to do
     }
-    if (!argv.push) {
-        // Push to S3 not enabled, so nothing to do.
-        log.info("push flag not specified. Not updating S3.");
-        return null;
-    }
 
     var layerPath = layer.path(opt.layerHome);
     if (!fs.existsSync(layerPath)) {
@@ -317,7 +311,19 @@ function pushLayer(layer) {
 var pushLayer_throttled = guard(guard.n(8), pushLayer);
 
 function pushLayers(layers) {
-    return when.map(layers, pushLayer_throttled);
+    if (!argv.push) {
+        // Push not enabled, so nothing to do.
+        log.info("push flag not specified.");
+        return null;
+    } else if (argv.push === "s3") {
+        return when.map(layers, pushLayer_throttled);
+    } else if (argv.push === "ftp") {
+        return tool.ftpUpload(layers, opt.layerHome, tool.FTP_LAYER_HOME);
+    } else {
+        // Push enabled but not a valid push method
+        log.info("push flag does not match supported methods (s3, ftp).");
+        return null;
+    }
 }
 
 function processCycle(cycle, forecasts) {

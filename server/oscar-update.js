@@ -27,7 +27,7 @@ var aws = require("./aws");
 var log = tool.log();
 var opt = function() {
     var argv = require("optimist")
-        .usage("Usage: $0 -g {path} -l {path} [-p]")
+        .usage("Usage: $0 -g {path} -l {path} [-p s3|ftp]")
         .demand(["g", "l"])
         .alias("g", "gridhome")
             .describe("g", "path where to save downloaded grid data files")
@@ -35,7 +35,7 @@ var opt = function() {
             .describe("l", "path where to save extracted layers")
         .alias("p", "push")
             .boolean("p")
-            .describe("p", "push updated layers to S3")
+            .describe("p", "push updated layers to amazon S3 or FTP")
         .argv;
 
     log.info("arguments: \n" + util.inspect(argv));
@@ -197,7 +197,19 @@ function pushLayer(layer) {
 }
 
 function pushLayers(layers) {
-    return when.map(layers, pushLayer);
+    if (!argv.push) {
+        // Push not enabled, so nothing to do.
+        log.info("push flag not specified.");
+        return null;
+    } else if (argv.push === "s3") {
+        return when.map(layers, pushLayer);
+    } else if (argv.push === "ftp") {
+        return tool.ftpUpload(layers, opt.layerHome, tool.FTP_OSCAR_HOME);
+    } else {
+        // Push enabled but not a valid push method
+        log.info("push flag does not match supported methods (s3, ftp).");
+        return null;
+    }
 }
 
 function updateCatalog() {
