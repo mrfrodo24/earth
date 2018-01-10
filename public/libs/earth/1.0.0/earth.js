@@ -545,7 +545,8 @@
     }
 
     function animate(globe, field, grids) {
-        if (!globe || !field || !grids) return;
+        if (!globe || !field || !grids || !configuration.get("showParticles"))
+            return;
 
         var cancel = this.cancel;
         var bounds = globe.bounds(view);
@@ -1083,6 +1084,20 @@
         });
         configuration.on("change:showGridPoints", function(x, showGridPoints) {
             d3.select("#option-show-grid").classed("highlighted", showGridPoints);
+        });
+
+        d3.select("#animate-start").on("click", function() {
+            configuration.save({showParticles: !configuration.get("showParticles")});
+            d3.select("#animate-start").classed("highlighted", configuration.get("showParticles"));
+        });
+        configuration.on("change:showParticles", function(x, showParticles) {
+            if (showParticles) {
+                // Should be able to just re-submit the animatorAgent
+                animatorAgent.submit(animate, globeAgent.value(), fieldAgent.value(), gridAgent.value());
+            } else {
+                // Resubmitting rendererAgent will cascade down and cancel the animator
+                startRendering();
+            }
         });
 
         // Add handlers for all wind level buttons.

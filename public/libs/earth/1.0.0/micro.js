@@ -530,7 +530,8 @@ var µ = function() {
                 orientation: "",
                 topology: TOPOLOGY,
                 overlayType: "default",
-                showGridPoints: false
+                showGridPoints: false,
+                showParticles: true
             };
             coalesce(tokens[9], "").split("/").forEach(function(segment) {
                 if ((option = /^(\w+)(=([\d\-.,]*))?$/.exec(segment))) {
@@ -547,6 +548,11 @@ var µ = function() {
                 else if ((option = /^grid=(\w+)$/.exec(segment))) {
                     if (option[1] === "on") {
                         result.showGridPoints = true;
+                    }
+                }
+                else if ((option = /^particles=(\w+)$/.exec(segment))) {
+                    if (option[1] === "off") {
+                        result.showParticles = false;
                     }
                 }
             });
@@ -573,7 +579,8 @@ var µ = function() {
             var proj = [attr.projection, attr.orientation].filter(isTruthy).join("=");
             var ol = !isValue(attr.overlayType) || attr.overlayType === "default" ? "" : "overlay=" + attr.overlayType;
             var grid = attr.showGridPoints ? "grid=on" : "";
-            return [dir, attr.param, attr.surface, attr.level, ol, proj, grid].filter(isTruthy).join("/");
+            var particles = attr.showParticles === "off" ? "particles=off" : "";
+            return [dir, attr.param, attr.surface, attr.level, ol, proj, grid, particles].filter(isTruthy).join("/");
         },
 
         /**
