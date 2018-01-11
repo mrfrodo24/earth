@@ -199,11 +199,12 @@ exports.grib2json = function(args, out, err) {
 exports.ftpUpload = function(layers, layerHome, key) {
     var ftp = new PromiseFtp();
     var ftpLayer = function(layer) {
+        if (!layer) return null;
         var layerSrc = layer.path(layerHome);
         var layerDest = layer.path(key);
         // ensure server directory
         var serverDir = layerDest.lastIndexOf('/');
-        ftp.mkdir(layerDest.substr(0, serverDir), true);
+        ftp.mkdir(layerDest.substr(0, serverDir), true)
             .catch(function(e) {
                 log.info("Couldn't create directory, " + e.message ? e.message : '' + ": " + serverDir);
                 return false;
