@@ -208,11 +208,9 @@ var products = function() {
                     paths: [gfs1p0degPath(attr, "relative_humidity", attr.surface, attr.level)],
                     date: gfsDate(attr),
                     builder: function(file) {
-                        var vars = file.variables;
-                        var rh = vars.Relative_humidity_isobaric || vars.Relative_humidity_height_above_ground;
-                        var data = rh.data;
+                        var record = file[0], data = record.data;
                         return {
-                            header: netcdfHeader(vars.time, vars.lat, vars.lon, file.Originating_or_generating_Center),
+                            header: record.header,
                             interpolate: bilinearInterpolateScalar,
                             data: function(i) {
                                 return data[i];
@@ -224,9 +222,16 @@ var products = function() {
                     ],
                     scale: {
                         bounds: [0, 100],
-                        gradient: function(v, a) {
-                            return µ.sinebowColor(Math.min(v, 100) / 100, a);
-                        }
+                        gradient: 
+                            µ.segmentedColorScale([
+                                [0, [230, 165, 30]],
+                                [17, [120, 100, 95]],
+                                [34, [40, 44, 92]],
+                                [52, [21, 13, 193]],
+                                [68, [75, 63, 235]],
+                                [85, [25, 255, 255]],
+                                [100, [150, 255, 255]]
+                            ])
                     }
                 });
             }
