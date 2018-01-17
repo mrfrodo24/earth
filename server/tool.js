@@ -19,6 +19,7 @@ var spawn = require("child_process").spawn;
 var fs = require("fs");
 var path = require("path");
 var ftpConfig = require("../private/ftp-config.json");
+var serverConfig = require("../private/server-config.json");
 
 // CF won't compress MIME type "application/x-font-ttf" (the express.js default) but will compress "font/ttf".
 // https://support.cloudflare.com/hc/en-us/articles/200168396-What-will-CloudFlare-gzip-
@@ -179,6 +180,7 @@ exports.download = function(resource, output) {
 exports.grib2json = function(args, out, err) {
     var d = when.defer();
     var command = process.platform.indexOf("win") === 0 ? "grib2json.bat" : "grib2json";
+    command = serverConfig.G2J_PATH.concat(command);
     log.info(command + " " + args);
     var child = spawn(command, args instanceof Array ? args : args.split(" "));
 
