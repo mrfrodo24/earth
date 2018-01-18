@@ -170,7 +170,8 @@ function download(product) {
 
     var server = nextServer();
     var remotePath = product.path("http://" + server);
-    var tempStream = temp.createWriteStream();
+    mkdirp.sync("../tmp");
+    var tempStream = temp.createWriteStream({dir: "../tmp"});
     var progress = 0;
     return delay(10 * 1000).then(function() {
         return tool.download(remotePath, tempStream).then(
