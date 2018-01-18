@@ -6,4 +6,5 @@ scratch
 public/data/weather
 private/*
 !private/*.example.json
+tmp
 *.iml

@@ -469,7 +469,7 @@ function copyCurrent() {
         return d.promise;
     });
 
-    // Now push to S3.
+    // Now push to FTP or S3.
     return pushLayers(layers);
 }
 
