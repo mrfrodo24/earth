@@ -4,6 +4,6 @@ node_modules
 target
 scratch
 public/data/weather
-private
+private/*
 !private/*.example.json
 *.iml
