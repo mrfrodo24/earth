@@ -75,6 +75,56 @@ utility:
     grib2json -d -n -o current-wind-surface-level-gfs-1.0.json gfs.t00z.pgrb2.1p00.f000
     cp current-wind-surface-level-gfs-1.0.json <earth-git-repository>/public/data/weather/current
 
+data fetching
+---------------
+
+The utilities to sync weather data have been resurrected from the original [earth](https://github.com/cambecc/earth) and built upon.  There is now the ability to push data to an FTP site. 
+**Some pre-reqs for automatic updates**
+  * You'll need the [grib2json](https://github.com/cambecc/grib2json) utility in order to run either `gfs-update.js` or `oscar-update.js` in the `server` directory.  The grib2json README is a bit sparse so here's some steps to aid
+    1. Clone the repo and `cd` into it
+    2. First, you will need Apache Maven (mvn). Check to see if you already have it installed by running 
+
+            mvn -v
+
+        If it is installed you should see details of the mvn version and configuration.  Visit the [mvn download page](https://maven.apache.org/download.cgi) to install it if you do not have it.
+        
+        Once installed, you'll want to verify that the Java kit being referenced as the Java Home is a JDK and not a JRE.  This info will be in the output from running the command above.  e.g.
+        
+            Apache Maven 3.5.2 (138edd61fd100ec658bfa2d307c43b76940a5d7d; 2017-10-18T03:58:13-04:00)
+            Maven home: /opt/apache-maven
+            Java version: 9.0.4, vendor: Oracle Corporation
+            Java home: /home/disk/ivanova2/spencerwork/jdk-9.0.4
+            Default locale: en_US, platform encoding: UTF-8
+            OS name: "linux", version: "2.6.32-358.6.1.el6.centos.plus.x86_64", arch: "amd64", family: "unix"
+            
+        Notice the **Java home** line, where my server is referencing a local JDK install.  
+    3. Build the grib2json utility by running this command in the project root directory
+    
+            mvn package
+            
+        If successful, you should end up with a `grib2json-*-SNAPSHOT.tar.gz` file in the grib2json `target` directory.
+            
+    4. Expand the tar file produced in `target`
+        
+            tar -xvf grib2json-0.8.0-SNAPSHOT.tar.gz
+            
+    5. In the snapshot folder you just expanded, you should have `bin` and `lib` directories.  The `bin` directory contains the grib2json commands.  Set the `G2J_PATH` in your own `private/server-config.json` to the full path to the `bin` directory.
+    
+    6. Once you have your server config file with the `G2J_PATH` defined, you should be ready to run commands such as:
+    
+            node gfs-update.js -g ../scratch -l ../public/data/weather -f now -u 2018-01-01 -p ftp -d 24
+            
+        Which would fetch the layers defined in `LAYER_RECIPES` of `gfs-update.js` for the current forecast (out to 72 hours) and for the previous analyses back to 2018-01-01.
+        
+
+Automatic retrieval can then be used by setting up a root crontab such as
+
+    0 2-23/3 * * * cd /path/to/project/server && sudo -u yourusername "./sync_gfs.sh"
+    
+_runs every 3 hours beginning at 0200 local time_
+
+making sure to set `/path/to/project` to be your project's root path, and `yourusername` for whatever user you want to run the sync command as (if you don't want to run as root).
+
 font subsetting
 ---------------
 
