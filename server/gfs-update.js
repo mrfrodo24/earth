@@ -86,6 +86,10 @@ var LAYER_RECIPES = [
     { name: "relative_humidity-isobaric-850hpa",    filter: "--fd 0 --fc 1 --fp 1 --fs 100 --fv 85000" },
     { name: "relative_humidity-isobaric-1000hpa",   filter: "--fd 0 --fc 1 --fp 1 --fs 100 --fv 100000" },
     { name: "relative_humidity-surface-level",      filter: "--fd 0 --fc 1 --fp 1 --fs 103 --fv 2" },
+    { name: "geopotential-isobaric-250hpa",         filter: "--fd 0 --fc 3 --fp 5 --fs 100 --fv 25000" },
+    { name: "geopotential-isobaric-500hpa",         filter: "--fd 0 --fc 3 --fp 5 --fs 100 --fv 50000" },
+    { name: "geopotential-isobaric-700hpa",         filter: "--fd 0 --fc 3 --fp 5 --fs 100 --fv 70000" },
+    { name: "geopotential-isobaric-850hpa",         filter: "--fd 0 --fc 3 --fp 5 --fs 100 --fv 85000" },
 ];
 
 var servers = [

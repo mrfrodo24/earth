@@ -102,6 +102,19 @@ var µ = function() {
     }
 
     /**
+     * https://github.com/sloisel/numeric/blob/master/src/numeric.js#L922
+     * @returns {array} list of n values evenly spaced between a and b.
+     */
+    function linspace(a,b,n) {
+        if(typeof n === "undefined") n = Math.max(Math.round(b-a)+1,1);
+        if(n<2) { return n===1?[a]:[]; }
+        var i,ret = Array(n);
+        n--;
+        for(i=n;i>=0;i--) { ret[i] = (i*b+(n-i)*a)/n; }
+        return ret;
+    }
+
+    /**
      * @returns {Boolean} true if agent is probably a mobile device. Don't really care if this is accurate.
      */
     function isMobile() {
@@ -637,6 +650,7 @@ var µ = function() {
         spread: spread,
         zeroPad: zeroPad,
         capitalize: capitalize,
+        linspace: linspace,
         isFF: isFF,
         isMobile: isMobile,
         isEmbeddedInIFrame: isEmbeddedInIFrame,
