@@ -893,7 +893,7 @@
             .attr("width", (d3.select("#menu").node().offsetWidth - label.offsetWidth) * 0.97)
             .attr("height", label.offsetHeight / 2);
 
-        d3.select("#show-menu").on("click", function() {
+        d3.select("#show-menu").on("mouseover", function() {
             if (µ.isEmbeddedInIFrame()) {
                 window.open("http://earth.nullschool.net/" + window.location.hash, "_blank");
             }
@@ -901,6 +901,9 @@
                 d3.select("#menu").classed("invisible", !d3.select("#menu").classed("invisible"));
             }
         });
+        d3.select("#menu").on("mouseleave", function() {
+            d3.select("#menu").classed("invisible", !d3.select("#menu").classed("invisible"));
+        })
 
         if (µ.isFF()) {
             // Workaround FF performance issue of slow click behavior on map having thick coastlines.
