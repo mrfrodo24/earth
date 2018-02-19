@@ -13,24 +13,6 @@
 }
 
 /**************************************************************************************************
- * Styling Reset
- **************************************************************************************************/
-
-html, body, div, span, h1, h2, h3, h4, h5, h6, p, a, svg, canvas {
-    margin: 0;
-    padding: 0;
-    border: 0;
-    font: 1em mplus-2p-light-sub,Helvetica,arial,freesans,clean,sans-serif;
-    -webkit-font-smoothing: subpixel-antialiased; /* safari disables subpixel antialiasing for some reason */
-}
-
-@media (max-width: 825px), (max-height: 700px) {
-    html, body, div, span, h1, h2, h3, h4, h5, h6, p, a, svg, canvas {
-        font-size: 0.8em;
-    }
-}
-
-/**************************************************************************************************
  * Page Styling
  **************************************************************************************************/
 
@@ -174,6 +156,18 @@ body {
     padding-top: 0.5rem;
 }
 
+.scale-bound {
+    height: 32px;
+    width: 48px;
+    background-color: black;
+    border: 1px solid white;
+    caret-color: white;
+    color: white;
+    font-size: 16px;
+}
+.scale-bound:focus {outline:none;}
+.scale-bound:disabled {border-color:grey; color:grey;}
+
 .social-icon {
     font-size: 2.25rem;
     font-family: monosocialiconsfont-sub,sans-serif;
@@ -305,4 +299,23 @@ body {
 
 #closing {
     padding-bottom: 2.5rem;
+}
+
+/**************************************************************************************************
+ * Styling Reset
+ **************************************************************************************************/
+
+html, body, div, span, h1, h2, h3, h4, h5, h6, p, a, svg, canvas {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font: 1em mplus-2p-light-sub,Helvetica,arial,freesans,clean,sans-serif;
+    -webkit-font-smoothing: subpixel-antialiased; /* safari disables subpixel antialiasing for some reason */
+}
+
+@media (max-width: 825px), (max-height: 700px) {
+    html, body, div, span, h1, h2, h3, h4, h5, h6, p, a, svg, canvas {
+        font-size: 0.8em;
+    }
+    .scale-bound {height:20px; width:30px; font-size:12px;}
 }

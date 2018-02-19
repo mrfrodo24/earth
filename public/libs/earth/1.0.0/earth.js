@@ -657,7 +657,7 @@
         });
     }
 
-    function drawOverlay(field, overlayType) {
+    function drawOverlay(field, level, overlayType) {
         if (!field) return;
 
         var ctx = d3.select("#overlay").node().getContext("2d"), grid = (gridAgent.value() || {}).overlayGrid;
@@ -672,8 +672,14 @@
         }
 
         if (grid) {
+            var colorBar = d3.select("#scale"), 
+                upperBound = d3.select("#scale-upper-bound"),
+                lowerBound = d3.select("#scale-lower-bound"), 
+                elementId = grid.type === "wind" ? "#location-wind-units" : "#location-value-units",
+                units = createUnitToggle(elementId, grid).value(),
+                scale = grid.scale, bounds = scale.bounds;
+
             // Draw color bar for reference.
-            var colorBar = d3.select("#scale"), scale = grid.scale, bounds = scale.bounds;
             var c = colorBar.node(), g = c.getContext("2d"), n = c.width - 1;
             for (var i = 0; i <= n; i++) {
                 var rgb = scale.gradient(µ.spread(i / n, bounds[0], bounds[1]), 1);
@@ -681,8 +687,16 @@
                 g.fillRect(i, 0, 1, c.height);
             }
 
+            // Set bounds input
+            var ub = upperBound.node(), lb = lowerBound.node();
+            ub.value = units.conversion(bounds[1]).toFixed(units.precision);
+            lb.value = units.conversion(bounds[0]).toFixed(units.precision);
+            // optionally disable the user input
+            lowerBound.attr('disabled', scale.adjustable ? null : true);
+            upperBound.attr('disabled', scale.adjustable ? null : true);
+
             // Show tooltip on hover.
-            colorBar.on("mousemove", function() {
+            colorBar.on("mouseover", function() {
                 var x = d3.mouse(this)[0];
                 var pct = µ.clamp((Math.round(x) - 2) / (n - 2), 0, 1);
                 var value = µ.spread(pct, bounds[0], bounds[1]);
@@ -889,8 +903,9 @@
         d3.selectAll(".fill-screen").attr("width", view.width).attr("height", view.height);
         // Adjust size of the scale canvas to fill the width of the menu to the right of the label.
         var label = d3.select("#scale-label").node();
+        var colorScaleWidthFactor = view.width > 825 && view.height > 700 ? 0.7 : 0.55;
         d3.select("#scale")
-            .attr("width", (d3.select("#menu").node().offsetWidth - label.offsetWidth) * 0.97)
+            .attr("width", (d3.select("#menu").node().offsetWidth - label.offsetWidth) * colorScaleWidthFactor)
             .attr("height", label.offsetHeight / 2);
 
         d3.select("#show-menu").on("mouseover", function() {
@@ -995,16 +1010,16 @@
         animatorAgent.listenTo(fieldAgent, "submit", stopCurrentAnimation.bind(null, false));
 
         overlayAgent.listenTo(fieldAgent, "update", function() {
-            overlayAgent.submit(drawOverlay, fieldAgent.value(), configuration.get("overlayType"));
+            overlayAgent.submit(drawOverlay, fieldAgent.value(), configuration.get('level'), configuration.get("overlayType"));
         });
         overlayAgent.listenTo(rendererAgent, "start", function() {
-            overlayAgent.submit(drawOverlay, fieldAgent.value(), null);
+            overlayAgent.submit(drawOverlay, fieldAgent.value(), configuration.get('level'), null);
         });
         overlayAgent.listenTo(configuration, "change", function() {
             var changed = _.keys(configuration.changedAttributes())
             // if only overlay relevant flags have changed...
             if (_.intersection(changed, ["overlayType", "showGridPoints"]).length > 0) {
-                overlayAgent.submit(drawOverlay, fieldAgent.value(), configuration.get("overlayType"));
+                overlayAgent.submit(drawOverlay, fieldAgent.value(), configuration.get('level'), configuration.get("overlayType"));
             }
         });
 
@@ -1101,6 +1116,45 @@
                 // Resubmitting rendererAgent will cascade down and cancel the animator
                 startRendering();
             }
+        });
+
+        // Add handlers for user bounds inputs
+        function updateUserScale() {
+            var grid = (gridAgent.value() || {}).overlayGrid,
+                overlayType = grid.type,
+                elementId = grid.type === "wind" ? "#location-wind-units" : "#location-value-units",
+                units = createUnitToggle(elementId, grid).value(),
+                level = configuration.get('level');
+
+            if (!overlayType) overlayType = 'off';
+            var upperBound = d3.select("#scale-upper-bound");
+            var lowerBound = d3.select("#scale-lower-bound");
+            var x = parseFloat(this.value);
+            if (isNaN(x)) {
+                d3.select(this).style('border', '1px solid red');
+                return false;
+            }
+            d3.select(this).style('border', null);
+            var range = [parseFloat(lowerBound.node().value), parseFloat(upperBound.node().value)];
+            if (units.backconvert) {
+                range[0] = units.backconvert(range[0]);
+                range[1] = units.backconvert(range[1]);
+            }
+            // store
+            scales.save(overlayType, level, {
+                bounds: range,
+                colorbar: 'default' // TODO
+            });
+            // update
+            gridAgent.submit(buildGrids);
+        }
+        d3.select("#scale-upper-bound").on("input", _.debounce(updateUserScale, 800));
+        d3.select("#scale-lower-bound").on("input", _.debounce(updateUserScale, 800));
+        d3.select("#scale-reset-default").on("click", function () {
+            var grid = (gridAgent.value() || {}).overlayGrid,
+            overlayType = grid ? grid.type : configuration.get('overlayType');
+            scales.clearSaved(overlayType, configuration.get('level'));
+            gridAgent.submit(buildGrids);
         });
 
         // Add handlers for all wind level buttons.

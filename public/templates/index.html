@@ -69,7 +69,13 @@
                 id="toggle-zone" class="text-button"></span>
             </p>
             <p>{{__('Data')}} | <span id="data-layer"></span></p>
-            <p><span id="scale-label">{{__('Scale')}} | </span><canvas id="scale"></canvas></p>
+            <p>
+                <span id="scale-label">{{__('Scale')}} | </span>
+                <input id="scale-lower-bound" class="scale-bound" type="text">
+                <canvas id="scale"></canvas>
+                <input id="scale-upper-bound" class="scale-bound" type="text">
+                <span id="scale-reset-default" class="text-button">{{__('default')}}</span>
+            </p>
             <p>{{__('DataSource')}} | <span id="data-center"></span></p>
             <p>{{__('Control')}} | <span
                 class="text-button" id="nav-now" title="{{__('Current Conditions')}}">{{__('Now')}}</span><span
@@ -100,7 +106,7 @@
                 class="text-button" id="overlay-wind" title="{{__('Wind Speed')}}">{{__('Wind')}}</span> – <span
                 class="text-button" id="overlay-temp" title="{{__('Temperature')}}">{{__('Temp')}}</span> – <span
                 class="text-button" id="overlay-relative_humidity" title="{{__('Relative Humidity')}}">{{__('RH')}}</span> – <span
-                class="text-button" id="overlay-geopotential" title="{{__('Geopotential')}}">{{__('HGHT')}}</span>
+                class="text-button" id="overlay-geopotential" title="{{__('Geopotential')}}">{{__('GEOP')}}</span>
             </p>
             <p class="wind-mode"><span style="visibility:hidden">{{__('Overlay')}}</span> | <span
                 class="text-button" id="overlay-total_precipitable_water" title="{{__('Total Precipitable Water')}}">{{__('TPW')}}</span> – <span

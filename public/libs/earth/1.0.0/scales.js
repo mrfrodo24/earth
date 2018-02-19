@@ -8,7 +8,6 @@
  */
 var scales = function() {
     "use strict";
-    var me = this;
 
     /**
      * @param {string} the type of surface
@@ -20,32 +19,64 @@ var scales = function() {
         if (surface !== "isobaric") {
             return {bounds: [], gradient: []};
         }
-        var range;
-        if (level === "850hPa")      range = [900, 1700];
+        // get user settings
+        var user = this.getSaved('geopotential', level), range;
+        if (user) range = user.bounds;
+        else if (level === "850hPa") range = [900, 1700];
         else if (level === "700hPa") range = [2450, 3300];
         else if (level === "500hPa") range = [4900, 6000];
         else if (level === "250hPa") range = [9400, 11050];
-        else 
-            return {bounds: [], gradient: []};
+        else return {bounds: [], gradient: []};
+
         var colors = convertColorsTo256(JSON.parse(JSON.stringify(GRADIENTS.magma)));
-        var gradient = µ.linspace(range[0], range[1], 256);
-        return constructScale(range, gradient, colors);
+        var gradient = µ.linspace(range, 256);
+        return constructSegmentedScale(range, gradient, colors, true);
     }
 
-    function mean_sea_level_pressure() {
+    function wind(surface, level) {
+        var user = this.getSaved('wind', level), range;
+        if (user) range = user.bounds;
+        else range = [0, 100];
+        return constructSinebowScale(range, true);
+    }
+
+    function mean_sea_level_pressure(level) {
+        var user = this.getSaved('mean_sea_level_pressure', level), range;
         var colors = convertColorsTo256(JSON.parse(JSON.stringify(GRADIENTS.vidris)));
-        var range = [95000, 105000];
-        var gradient = µ.linspace(range[0], range[1], 256);
-        return constructScale(range, gradient, colors);
+        if (user) range = user.bounds;
+        else range = [95000, 105000];
+        var gradient = µ.linspace(range, 256);
+        return constructSegmentedScale(range, gradient, colors, true);
     }
 
-    function constructScale(range, gradient, colors) {
+    function relative_humidity(surface, level) {
+        var user = this.getSaved('relative_humidity', level), range;
+        if (user) range = user.bounds;
+        else range = [0, 100];
+        var colors = JSON.parse(JSON.stringify(GRADIENTS.moisture1));
+        var gradient = µ.linspace(range, GRADIENTS.moisture1.length);
+        return constructSegmentedScale(range, gradient, colors, true);
+    }
+
+    function constructSinebowScale(range, adjustable) {
+        var max = range[1];
+        return {
+            bounds: range,
+            gradient: function(v, a) {
+                return µ.extendedSinebowColor(Math.min(v, max) / max, a);
+            },
+            adjustable: adjustable
+        }
+    }
+
+    function constructSegmentedScale(range, gradient, colors, adjustable) {
         for (var i = gradient.length - 1; i >= 0; i--) {
             gradient[i] = [gradient[i], colors[i]];
         }
         return {
             bounds: range,
-            gradient: µ.segmentedColorScale(gradient)
+            gradient: µ.segmentedColorScale(gradient),
+            adjustable: adjustable
         };
     }
 
@@ -69,7 +100,41 @@ var scales = function() {
         return gradient;
     }
 
+    function clearSaved(product, layer) {
+        if (!window.localStorage) return false;
+        window.localStorage.removeItem('scale-' + product + '-' + layer);
+    }
+
+    function getSaved(product, layer) {
+        if (window.localStorage) {
+            var userScale = window.localStorage.getItem('scale-' + product + '-' + layer);
+            if (userScale !== null)
+                return JSON.parse(userScale);
+        }
+        return false
+    }
+
+    /**
+     * A userScale object will track the following:
+     *  `bounds`: lower and upper bounds on scale (in native units)
+     *  `colorbar`: the selected color bar scheme
+     */
+    function save(product, level, userScale) {
+        if (!window.localStorage) return false;
+        window.localStorage.setItem('scale-' + product + '-' + level, JSON.stringify(userScale));
+    }
+
     const GRADIENTS = {
+        "moisture1": [
+            [230, 165, 30],
+            [120, 100, 95],
+            [40, 44, 92],
+            [21, 13, 193],
+            [75, 63, 235],
+            [25, 255, 255],
+            [150, 255, 255]
+        ],
+
         "magma": [
             [0.001462, 0.000466, 0.013866],
             [0.002258, 0.001295, 0.018331],
@@ -591,7 +656,12 @@ var scales = function() {
 
     return {
         geopotential: geopotential,
-        mean_sea_level_pressure: mean_sea_level_pressure
+        wind: wind,
+        mean_sea_level_pressure: mean_sea_level_pressure,
+        relative_humidity: relative_humidity,
+        save: save,
+        getSaved: getSaved,
+        clearSaved: clearSaved,
     };
 
 }();

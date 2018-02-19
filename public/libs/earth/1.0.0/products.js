@@ -132,17 +132,12 @@ var products = function() {
                         }
                     },
                     units: [
-                        {label: "km/h", conversion: function(x) { return x * 3.6; },      precision: 0},
                         {label: "m/s",  conversion: function(x) { return x; },            precision: 1},
-                        {label: "kn",   conversion: function(x) { return x * 1.943844; }, precision: 0},
-                        {label: "mph",  conversion: function(x) { return x * 2.236936; }, precision: 0}
+                        {label: "km/h", conversion: function(x) { return x * 3.6; },      precision: 0, backconvert: function(x) { return x / 3.6; }},
+                        {label: "kn",   conversion: function(x) { return x * 1.943844; }, precision: 0, backconvert: function(x) { return x / 1.943844; }},
+                        {label: "mph",  conversion: function(x) { return x * 2.236936; }, precision: 0, backconvert: function(x) { return x / 2.236936; }}
                     ],
-                    scale: {
-                        bounds: [0, 100],
-                        gradient: function(v, a) {
-                            return µ.extendedSinebowColor(Math.min(v, 100) / 100, a);
-                        }
-                    },
+                    scale: scales.wind(attr.surface, attr.level),
                     particles: {velocityScale: 1/60000, maxIntensity: 17}
                 });
             }
@@ -171,11 +166,12 @@ var products = function() {
                         }
                     },
                     units: [
-                        {label: "°C", conversion: function(x) { return x - 273.15; },       precision: 1},
-                        {label: "°F", conversion: function(x) { return x * 9/5 - 459.67; }, precision: 1},
+                        {label: "°C", conversion: function(x) { return x - 273.15; },       precision: 1, backconvert: function(x) { return x + 273.15; }},
+                        {label: "°F", conversion: function(x) { return x * 9/5 - 459.67; }, precision: 1, backconvert: function(x) { return 5 * (x + 459.67) / 9; }},
                         {label: "K",  conversion: function(x) { return x; },                precision: 1}
                     ],
                     scale: {
+                        adjustable: false,
                         bounds: [193, 328],
                         gradient: µ.segmentedColorScale([
                             [193,     [37, 4, 42]],
@@ -220,19 +216,7 @@ var products = function() {
                     units: [
                         {label: "%", conversion: function(x) { return x; }, precision: 0}
                     ],
-                    scale: {
-                        bounds: [0, 100],
-                        gradient: 
-                            µ.segmentedColorScale([
-                                [0, [230, 165, 30]],
-                                [17, [120, 100, 95]],
-                                [34, [40, 44, 92]],
-                                [52, [21, 13, 193]],
-                                [68, [75, 63, 235]],
-                                [85, [25, 255, 255]],
-                                [100, [150, 255, 255]]
-                            ])
-                    }
+                    scale: scales.relative_humidity(attr.surface, attr.level),
                 });
             }
         },
@@ -260,7 +244,7 @@ var products = function() {
                         };
                     },
                     units: [
-                        {label: "dam", conversion: function(x) { return x / 10; }, precision: 0}
+                        {label: "dam", conversion: function(x) { return x / 10; }, precision: 0, backconvert: function(x) { return x * 10; }}
                     ],
                     scale: scales.geopotential(attr.surface, attr.level)
                 });
@@ -294,6 +278,7 @@ var products = function() {
                         {label: "kg/m³", conversion: function(x) { return x; }, precision: 2}
                     ],
                     scale: {
+                        adjustable: false,
                         bounds: [0, 1.5],
                         gradient: function(v, a) {
                             return µ.sinebowColor(Math.min(v, 1.5) / 1.5, a);
@@ -335,10 +320,11 @@ var products = function() {
                         };
                     },
                     units: [
-                        {label: "kW/m²", conversion: function(x) { return x / 1000; }, precision: 1},
+                        {label: "kW/m²", conversion: function(x) { return x / 1000; }, precision: 1, backconvert: function(x) { return x * 1000; }},
                         {label: "W/m²", conversion: function(x) { return x; }, precision: 0}
                     ],
                     scale: {
+                        adjustable: false,
                         bounds: [0, 80000],
                         gradient: µ.segmentedColorScale([
                             [0, [15, 4, 96]],
@@ -382,6 +368,7 @@ var products = function() {
                         {label: "kg/m²", conversion: function(x) { return x; }, precision: 3}
                     ],
                     scale: {
+                        adjustable: false,
                         bounds: [0, 1],
                         gradient: µ.segmentedColorScale([
                             [0.0, [5, 5, 89]],
@@ -419,6 +406,7 @@ var products = function() {
                         {label: "kg/m²", conversion: function(x) { return x; }, precision: 3}
                     ],
                     scale: {
+                        adjustable: false,
                         bounds: [0, 70],
                         gradient:
                             µ.segmentedColorScale([
@@ -458,11 +446,11 @@ var products = function() {
                         }
                     },
                     units: [
-                        {label: "hPa", conversion: function(x) { return x / 100; }, precision: 0},
-                        {label: "mmHg", conversion: function(x) { return x / 133.322387415; }, precision: 0},
-                        {label: "inHg", conversion: function(x) { return x / 3386.389; }, precision: 1}
+                        {label: "hPa", conversion: function(x) { return x / 100; },             precision: 0, backconvert: function(x) { return x * 100; }},
+                        {label: "mmHg", conversion: function(x) { return x / 133.322387415; },  precision: 0, backconvert: function(x) { return x * 133.322387415; }},
+                        {label: "inHg", conversion: function(x) { return x / 3386.389; },       precision: 1, backconvert: function(x) { return x * 3386.389; }}
                     ],
-                    scale: scales.mean_sea_level_pressure()
+                    scale: scales.mean_sea_level_pressure(attr.level)
                 });
             }
         },

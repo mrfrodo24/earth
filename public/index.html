@@ -65,7 +65,13 @@
                 id="toggle-zone" class="text-button"></span>
             </p>
             <p>Data | <span id="data-layer"></span></p>
-            <p><span id="scale-label">Scale | </span><canvas id="scale"></canvas></p>
+            <p>
+                <span id="scale-label">Scale | </span>
+                <input id="scale-lower-bound" class="scale-bound" type="text">
+                <canvas id="scale"></canvas>
+                <input id="scale-upper-bound" class="scale-bound" type="text">
+                <span id="scale-reset-default" class="text-button">default</span>
+            </p>
             <p>Source | <span id="data-center"></span></p>
             <p>Control | <span
                 class="text-button" id="nav-now" title="Current Conditions">Now</span><span
@@ -96,7 +102,7 @@
                 class="text-button" id="overlay-wind" title="Wind Speed">Wind</span> – <span
                 class="text-button" id="overlay-temp" title="Temperature">Temp</span> – <span
                 class="text-button" id="overlay-relative_humidity" title="Relative Humidity">RH</span> – <span
-                class="text-button" id="overlay-geopotential" title="Geopotential Height">HGHT</span>
+                class="text-button" id="overlay-geopotential" title="Geopotential Height">GEOP</span>
             </p>
             <p class="wind-mode"><span style="visibility:hidden">Overlay</span> | <span
                 class="text-button" id="overlay-total_precipitable_water" title="Total Precipitable Water">TPW</span> – <span

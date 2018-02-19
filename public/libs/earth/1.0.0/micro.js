@@ -105,7 +105,8 @@ var µ = function() {
      * https://github.com/sloisel/numeric/blob/master/src/numeric.js#L922
      * @returns {array} list of n values evenly spaced between a and b.
      */
-    function linspace(a,b,n) {
+    function linspace(r,n) {
+        var a=r[0],b=r[1];
         if(typeof n === "undefined") n = Math.max(Math.round(b-a)+1,1);
         if(n<2) { return n===1?[a]:[]; }
         var i,ret = Array(n);
