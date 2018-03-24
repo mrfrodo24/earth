@@ -912,13 +912,15 @@
             if (µ.isEmbeddedInIFrame()) {
                 window.open("http://earth.nullschool.net/" + window.location.hash, "_blank");
             }
-            else {
-                d3.select("#menu").classed("invisible", !d3.select("#menu").classed("invisible"));
+            else if (d3.select("#menu").classed("invisible")) {
+                d3.select("#menu").classed("invisible", false);
             }
         });
-        d3.select("#menu").on("mouseleave", function() {
-            d3.select("#menu").classed("invisible", !d3.select("#menu").classed("invisible"));
-        })
+        d3.select("#show-menu").on("click", function() {
+            var menu = d3.select("#menu");
+            var isMenuVisible = !menu.classed("invisible");
+            menu.classed("invisible", isMenuVisible);
+        });
 
         if (µ.isFF()) {
             // Workaround FF performance issue of slow click behavior on map having thick coastlines.
