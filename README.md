@@ -15,7 +15,7 @@ building and launching
 After installing node.js and npm, clone "earth" and install dependencies:
 
     git clone https://github.com/mrfrodo24/weather-flow
-    cd earth
+    cd weather-flow
     npm install
 
 Next, launch the development web server:
