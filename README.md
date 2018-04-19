@@ -5,19 +5,17 @@ earth
 
 "earth" is a project to visualize global weather conditions.
 
-A customized instance of "earth" is available at http://earth.nullschool.net.
+A customized instance of "earth" is available at http://weather-flow.environmentanalytics.com.
 
-"earth" is a personal project I've used to learn javascript and browser programming, and is based on the earlier
-[Tokyo Wind Map](https://github.com/cambecc/air) project.  Feedback and contributions are welcome! ...especially
-those that clarify accepted best practices.
+"earth" is a project originally built by Cameron Beccario. The Environment Analytics group at NCSU have forked this project and are continually adding new features to either improve usability, add new weather products, or implement new visualization functionality. Feedback and contributions are welcome! ...especially those that clarify accepted best practices.
 
 building and launching
 ----------------------
 
 After installing node.js and npm, clone "earth" and install dependencies:
 
-    git clone https://github.com/cambecc/earth
-    cd earth
+    git clone https://github.com/mrfrodo24/weather-flow
+    cd weather-flow
     npm install
 
 Next, launch the development web server:
