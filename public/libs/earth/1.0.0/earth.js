@@ -853,6 +853,58 @@
         }
     }
 
+    /**
+     * Sets the text/html in the menu button.
+     * If the menu is hidden, then it fills it with the Date, Data, and Scale.
+     * @return void
+     */
+    function toggleAbbreviatedMenu() {
+        var menu = d3.select("#menu"),
+            showMenu = d3.select("#show-menu"),
+            grids = (gridAgent.value() || {}),
+            unitsId = grids.type === "wind" ? "#location-wind-units" : "#location-value-units";
+        if (menu.classed("invisible") && grids) {
+            var date = new Date(validityDate(grids)), isLocal = d3.select("#data-date").classed("local"),
+                formatted = isLocal ? µ.toLocalISO(date) : µ.toUTCISO(date),
+                langCode = d3.select("body").attr("data-lang") || "en",
+                pd = grids.primaryGrid.description(langCode), 
+                od = grids.overlayGrid.description(langCode),
+                description = od.name + od.qualifier,
+                bounds = grids.overlayGrid.scale.bounds,
+                units = grids.overlayGrid.units[0];
+            menu.classed("smaller-menu")
+            showMenu.html(
+                "<p>Date | " + formatted + " " + (isLocal ? "Local" : "UTC") + "</p>" + 
+                "<p>Data | " + description + "</p>" + 
+                '<p>Scale | ' + Math.round(units.conversion(bounds[0]), 0) +
+                        '<canvas id="menu-scale" style="padding: 0 10px;" class="invisible"></canvas>' + 
+                        Math.round(units.conversion(bounds[1]), 0) + ' ' + units.label + '</p>'
+            );
+            // Set the scale 
+            var menuScale = d3.select("#menu-scale"),
+                newCanvas = menuScale.node(),
+                mainCanvas = d3.select("#scale").node();
+            newCanvas.width = mainCanvas.width;
+            newCanvas.height = mainCanvas.height;
+            newCanvas.getContext('2d').drawImage(mainCanvas, 0, 0);
+            // Show tooltip on hover.
+            showMenu.attr("title", '');
+            menuScale.on("mouseover", null); // first clear the handlers on this new scale
+            menuScale.on("mouseover", function() {
+                var x = d3.mouse(this)[0];
+                var pct = µ.clamp((Math.round(x) - 2) / (mainCanvas.width - 3), 0, 1);
+                var value = µ.spread(pct, bounds[0], bounds[1]);
+                var elementId = grids.type === "wind" ? "#location-wind-units" : "#location-value-units";
+                var units = createUnitToggle(elementId, grids.overlayGrid).value();
+                menuScale.attr("title", µ.formatScalar(value, units) + " " + units.label);
+            });
+            menuScale.classed("invisible", false);
+        } else {
+            showMenu.text('earth');
+            showMenu.attr("title", 'menu');
+        }
+    }
+
     function stopCurrentAnimation(alsoClearCanvas) {
         animatorAgent.cancel();
         if (alsoClearCanvas) {
@@ -908,18 +960,14 @@
             .attr("width", (d3.select("#menu").node().offsetWidth - label.offsetWidth) * colorScaleWidthFactor)
             .attr("height", label.offsetHeight / 2);
 
-        d3.select("#show-menu").on("mouseover", function() {
+        d3.select("#show-menu").on("click", function() {
             if (µ.isEmbeddedInIFrame()) {
                 window.open("http://earth.nullschool.net/" + window.location.hash, "_blank");
             }
-            else if (d3.select("#menu").classed("invisible")) {
-                d3.select("#menu").classed("invisible", false);
-            }
-        });
-        d3.select("#show-menu").on("click", function() {
             var menu = d3.select("#menu");
             var isMenuVisible = !menu.classed("invisible");
             menu.classed("invisible", isMenuVisible);
+            toggleAbbreviatedMenu();
         });
 
         if (µ.isFF()) {

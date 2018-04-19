@@ -156,6 +156,7 @@ body {
     padding-top: 0.5rem;
 }
 
+#scale-label {font-size:1em;}
 .scale-bound {
     height: 32px;
     width: 48px;
