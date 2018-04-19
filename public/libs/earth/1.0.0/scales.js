@@ -28,7 +28,7 @@ var scales = function() {
         else if (level === "250hPa") range = [9400, 11050];
         else return {bounds: [], gradient: []};
 
-        var colors = convertColorsTo256(JSON.parse(JSON.stringify(GRADIENTS.magma)));
+        var colors = convertColorsTo256(getColorscaleCopy(COLORS.magma));
         var gradient = µ.linspace(range, 256);
         return constructSegmentedScale(range, gradient, colors, true);
     }
@@ -40,9 +40,25 @@ var scales = function() {
         return constructSinebowScale(range, true);
     }
 
+    function temperature(surface, level) {
+        var user = this.getSaved('temp', level), range;
+        if (user) {
+            range = user.bounds;
+            var colors = getColorscaleCopy(COLORS.temperature1);
+            var gradient = µ.linspace(range, COLORS.temperature1.length);
+            return constructSegmentedScale(range, gradient, colors, true);
+        } else {
+            return {
+                bounds: [193, 328],
+                gradient: µ.segmentedColorScale(DEFAULT_COLORS.temperature),
+                adjustable: true
+            };
+        }
+    }
+
     function mean_sea_level_pressure(level) {
         var user = this.getSaved('mean_sea_level_pressure', level), range;
-        var colors = convertColorsTo256(JSON.parse(JSON.stringify(GRADIENTS.vidris)));
+        var colors = convertColorsTo256(getColorscaleCopy(COLORS.vidris));
         if (user) range = user.bounds;
         else range = [95000, 105000];
         var gradient = µ.linspace(range, 256);
@@ -53,8 +69,8 @@ var scales = function() {
         var user = this.getSaved('relative_humidity', level), range;
         if (user) range = user.bounds;
         else range = [0, 100];
-        var colors = JSON.parse(JSON.stringify(GRADIENTS.moisture1));
-        var gradient = µ.linspace(range, GRADIENTS.moisture1.length);
+        var colors = getColorscaleCopy(COLORS.moisture1);
+        var gradient = µ.linspace(range, COLORS.moisture1.length);
         return constructSegmentedScale(range, gradient, colors, true);
     }
 
@@ -124,7 +140,41 @@ var scales = function() {
         window.localStorage.setItem('scale-' + product + '-' + level, JSON.stringify(userScale));
     }
 
-    const GRADIENTS = {
+    function getColorscaleCopy(colors) {
+        return JSON.parse(JSON.stringify(colors));
+    }
+
+    const DEFAULT_COLORS = {
+        "temperature": [
+            [193,     [37, 4, 42]],
+            [206,     [41, 10, 130]],
+            [219,     [81, 40, 40]],
+            [233.15,  [192, 37, 149]],  // -40 C/F
+            [255.372, [70, 215, 215]],  // 0 F
+            [273.15,  [21, 84, 187]],   // 0 C
+            [275.15,  [24, 132, 14]],   // just above 0 C
+            [291,     [247, 251, 59]],
+            [298,     [235, 167, 21]],
+            [311,     [230, 71, 39]],
+            [328,     [88, 27, 67]]
+        ]
+    }
+
+    const COLORS = {
+        "temperature1": [
+            [37, 4, 42],
+            [41, 10, 130],
+            [81, 40, 40],
+            [192, 37, 149],  // -40 C/F
+            [70, 215, 215],  // 0 F
+            [21, 84, 187],   // 0 C
+            [24, 132, 14],   // just above 0 C
+            [247, 251, 59],
+            [235, 167, 21],
+            [230, 71, 39],
+            [88, 27, 67]
+        ],
+
         "moisture1": [
             [230, 165, 30],
             [120, 100, 95],
@@ -657,6 +707,7 @@ var scales = function() {
     return {
         geopotential: geopotential,
         wind: wind,
+        temperature: temperature,
         mean_sea_level_pressure: mean_sea_level_pressure,
         relative_humidity: relative_humidity,
         save: save,
