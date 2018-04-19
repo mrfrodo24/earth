@@ -228,7 +228,7 @@ exports.ftpUpload = function(layers, layerHome, key) {
             return when.map(layers, ftpLayer);
         })
         .then(function () {
-            return ftp.destroy();
+            return ftp.end();
         })
         .finally(function () {
             log.info("finished pushing to FTP.");
