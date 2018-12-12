@@ -56,6 +56,9 @@ var log = tool.log();
 
 temp.track(true);
 
+const PRODUCT_TYPE = "1.0";
+const SUBSEQUENT_FORECASTS = [0, 3];
+
 var INDENT;  // = 2;
 var GRIB2JSON_FLAGS = "-c -d -n";
 var LAYER_RECIPES = [
@@ -136,8 +139,8 @@ var opt = function() {
         endDate: endDate,
         back: back,
         firstForecasts: forecasts,
-        subsequentForecasts: [0, 3],
-        productType: "1.0"
+        subsequentForecasts: SUBSEQUENT_FORECASTS,
+        productType: PRODUCT_TYPE
     };
 }();
 
@@ -323,6 +326,7 @@ function pushLayer(layer) {
 }
 
 var pushLayer_throttled = guard(guard.n(8), pushLayer);
+var ftpLayer_throttled = guard(guard.n(2), tool.ftpUpload.bind(this, opt.layerHome));
 
 function pushLayers(layers) {
     if (!argv.push) {
@@ -332,7 +336,7 @@ function pushLayers(layers) {
     } else if (argv.push === "s3") {
         return when.map(layers, pushLayer_throttled);
     } else if (argv.push === "ftp") {
-        return tool.ftpUpload(layers, opt.layerHome, tool.FTP_LAYER_HOME);
+        return when.map(layers, ftpLayer_throttled);
     } else {
         // Push enabled but not a valid push method
         log.info("push flag does not match supported methods (s3, ftp).");

@@ -27,8 +27,8 @@ mime.define({"font/ttf": ["ttf"]});
 
 temp.track(true);
 
-exports.FTP_LAYER_HOME = "data/weather/";
-exports.FTP_OSCAR_HOME = "data/oscar/";
+exports.FTP_LAYER_HOME = ftpConfig.layerHome;
+exports.FTP_OSCAR_HOME = ftpConfig.oscarHome;
 
 /**
  * Returns a new, nicely configured winston logger.
@@ -198,41 +198,39 @@ exports.grib2json = function(args, out, err) {
     return d.promise;
 };
 
-exports.ftpUpload = function(layers, layerHome, key) {
+exports.ftpUpload = function(layerHome, layer) {
     var ftp = new PromiseFtp();
-    var ftpLayer = function(layer) {
-        if (!layer) return null;
-        var layerSrc = layer.path(layerHome);
-        var layerDest = layer.path(key);
-        // ensure server directory
-        var serverDir = layerDest.lastIndexOf('/');
-        ftp.mkdir(layerDest.substr(0, serverDir), true)
-            .catch(function(e) {
-                log.info("Couldn't create directory, " + e.message ? e.message : '' + ": " + serverDir);
-                return false;
-            });
-        ftp.put(fs.createReadStream(layerSrc), layerDest)
-            .then(
-                function() {
-                    log.info("PUT " + layerDest + " successful!");
-                    return true;
-                },
-                function(e) {
-                    log.error(e.stack ? e.stack : e);
-                    return false;
-                }
-            );
-    };
     return ftp.connect(ftpConfig)
         .then(function (serverMessage) {
-            return when.map(layers, ftpLayer);
-        })
+            // call on layer
+            if (!layer) return null;
+            var layerSrc = layer.path(layerHome);
+            var layerDest = layer.path(ftpConfig.layerHome);
+            // ensure server directory
+            var serverDir = layerDest.lastIndexOf('/');
+            ftp.mkdir(layerDest.substr(0, serverDir), true)
+                .catch(function(e) {
+                    log.info("Couldn't create directory, " + e.message ? e.message : '' + ": " + serverDir);
+                    return false;
+                });
+            ftp.put(fs.createReadStream(layerSrc), layerDest)
+                .then(
+                    function() {
+                        log.info("PUT " + layerDest + " successful!");
+                        return true;
+                    },
+                    function(e) {
+                        log.error(e.stack ? e.stack : e);
+                        return false;
+                    }
+                );
+        }.bind(this))
         .then(function () {
             return ftp.end();
         })
         .finally(function () {
-            log.info("finished pushing to FTP.");
-        })
+            log.info("Closed FTP connection.");
+        });
 };
 
 /**
