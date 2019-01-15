@@ -252,6 +252,7 @@
         //         this allows us to use the product for navigation and other state.
         var cancel = this.cancel;
         downloadsInProgress++;
+        d3.select("#earth").classed("invisible", true);
         var loaded = when.map(products.productsFor(configuration.attributes), function(product) {
             return product.load(cancel);
         });
@@ -260,6 +261,7 @@
             return {primaryGrid: products[0], overlayGrid: products[1] || products[0]};
         }).ensure(function() {
             downloadsInProgress--;
+            d3.select("#earth").classed("invisible", false);
         });
     }
 
@@ -697,6 +699,7 @@
 
             // Show tooltip on hover.
             colorBar.on("mouseover", function() {
+                n = parseInt(colorBar.style('width'));
                 var x = d3.mouse(this)[0];
                 var pct = µ.clamp((Math.round(x) - 2) / (n - 2), 0, 1);
                 var value = µ.spread(pct, bounds[0], bounds[1]);
@@ -704,6 +707,11 @@
                 var units = createUnitToggle(elementId, grid).value();
                 colorBar.attr("title", µ.formatScalar(value, units) + " " + units.label);
             });
+
+            // update info colorbar if info is currently being shown
+            var info = d3.select("#show-info");
+            if (info.html() !== 'info')
+                setInfo(info, overlayType);
         }
     }
 
@@ -853,56 +861,84 @@
         }
     }
 
-    /**
-     * Sets the text/html in the menu button.
-     * If the menu is hidden, then it fills it with the Date, Data, and Scale.
-     * @return void
-     */
-    function toggleAbbreviatedMenu() {
-        var menu = d3.select("#menu"),
-            showMenu = d3.select("#show-menu"),
-            grids = (gridAgent.value() || {}),
-            unitsId = grids.type === "wind" ? "#location-wind-units" : "#location-value-units";
-        if (menu.classed("invisible") && grids) {
-            var date = new Date(validityDate(grids)), isLocal = d3.select("#data-date").classed("local"),
-                formatted = isLocal ? µ.toLocalISO(date) : µ.toUTCISO(date),
-                langCode = d3.select("body").attr("data-lang") || "en",
-                pd = grids.primaryGrid.description(langCode), 
-                od = grids.overlayGrid.description(langCode),
-                description = od.name + od.qualifier,
-                bounds = grids.overlayGrid.scale.bounds,
-                units = grids.overlayGrid.units[0];
-            menu.classed("smaller-menu")
-            showMenu.html(
-                "<p>Date | " + formatted + " " + (isLocal ? "Local" : "UTC") + "</p>" + 
-                "<p>Data | " + description + "</p>" + 
-                '<p>Scale | ' + Math.round(units.conversion(bounds[0]), 0) +
-                        '<canvas id="menu-scale" style="padding: 0 10px;" class="invisible"></canvas>' + 
-                        Math.round(units.conversion(bounds[1]), 0) + ' ' + units.label + '</p>'
-            );
-            // Set the scale 
-            var menuScale = d3.select("#menu-scale"),
-                newCanvas = menuScale.node(),
+    function setInfo(info, overlayType) {
+        // Change #show-info html to be the information (datetime, product, and color scale)
+        var grids = (gridAgent.value() || {}),
+            date = new Date(validityDate(grids)), isLocal = d3.select("#data-date").classed("local"),
+            formatted = isLocal ? µ.toLocalISO(date) : µ.toUTCISO(date),
+            langCode = d3.select("body").attr("data-lang") || "en",
+            pd = grids.primaryGrid.description(langCode), 
+            od = grids.overlayGrid.description(langCode),
+            description = od.name + od.qualifier,
+            bounds = grids.overlayGrid.scale.bounds,
+            units = grids.overlayGrid.units[0];
+        if (grids.primaryGrid !== grids.overlayGrid) {
+            // Combine both grid descriptions together with a " + " if their qualifiers are the same.
+            description = (pd.qualifier === od.qualifier ? pd.name : pd.name + pd.qualifier) + " + " + description;
+        }
+        info.html(
+            "<p>Date | " + formatted + " " + (isLocal ? "Local" : "UTC") + "</p>" + 
+            "<p>Data | " + description + "</p>" + 
+            (overlayType === 'off'
+                ? ''
+                : '<p>' +
+                    'Scale | <span class="scale-label scale-label-left">' + Math.round(units.conversion(bounds[0]), 0) + '</span>' + 
+                    '<canvas id="info-scale" class="invisible"></canvas>' + 
+                    '<span class="scale-label scale-label-right">' + Math.round(units.conversion(bounds[1]), 0) + ' ' + units.label + '</span>' + 
+                  '</p>'
+            )
+        );
+        // Set the scale 
+        if (overlayType !== 'off') {
+            var infoScale = d3.select("#info-scale"),
+                newCanvas = infoScale.node(),
                 mainCanvas = d3.select("#scale").node();
             newCanvas.width = mainCanvas.width;
             newCanvas.height = mainCanvas.height;
             newCanvas.getContext('2d').drawImage(mainCanvas, 0, 0);
             // Show tooltip on hover.
-            showMenu.attr("title", '');
-            menuScale.on("mouseover", null); // first clear the handlers on this new scale
-            menuScale.on("mouseover", function() {
+            infoScale.on("mouseover", null); // first clear the handlers on this new scale
+            infoScale.on("mouseover", function() {
                 var x = d3.mouse(this)[0];
-                var pct = µ.clamp((Math.round(x) - 2) / (mainCanvas.width - 3), 0, 1);
+                var n = parseInt(infoScale.style('width'));
+                var pct = µ.clamp((Math.round(x) - 2) / (n - 2), 0, 1);
                 var value = µ.spread(pct, bounds[0], bounds[1]);
                 var elementId = grids.type === "wind" ? "#location-wind-units" : "#location-value-units";
                 var units = createUnitToggle(elementId, grids.overlayGrid).value();
-                menuScale.attr("title", µ.formatScalar(value, units) + " " + units.label);
+                infoScale.attr("title", µ.formatScalar(value, units) + " " + units.label);
             });
-            menuScale.classed("invisible", false);
-        } else {
-            showMenu.text('earth');
-            showMenu.attr("title", 'menu');
+            infoScale.classed("invisible", false);
         }
+    }
+
+    function clearInfo(showInfo) {
+        showInfo.html('info');
+    }
+
+    /**
+     * Assumes will be binding the configuration as (this)
+     */
+    function toggleInfo() {
+        var showInfo = d3.select("#show-info"),
+            overlayType = this.attributes.overlayType;
+        if (showInfo.html() === 'info') {
+            setInfo(showInfo, overlayType);
+        } else {
+            clearInfo(showInfo);
+        }
+    }
+
+    /**
+     * Sets the text/html in the menu button.
+     * If the menu is hidden, then it fills it with the Date, Data, and Scale.
+     * @return void
+     */
+    function toggleMenu() {
+        var menu = d3.select("#menu"),
+            grids = (gridAgent.value() || {}),
+            isMenuVisible = !menu.classed("invisible");
+        if (grids)
+            menu.classed("invisible", isMenuVisible);
     }
 
     function stopCurrentAnimation(alsoClearCanvas) {
@@ -964,11 +1000,10 @@
             if (µ.isEmbeddedInIFrame()) {
                 window.open("http://earth.nullschool.net/" + window.location.hash, "_blank");
             }
-            var menu = d3.select("#menu");
-            var isMenuVisible = !menu.classed("invisible");
-            menu.classed("invisible", isMenuVisible);
-            toggleAbbreviatedMenu();
+            toggleMenu();
         });
+
+        d3.select("#show-info").on("click", toggleInfo.bind(configuration));
 
         if (µ.isFF()) {
             // Workaround FF performance issue of slow click behavior on map having thick coastlines.
@@ -1014,7 +1049,7 @@
                     // Do a rebuild if we have no overlay grid.
                     rebuildRequired = true;
                 }
-                else if (overlay.type !== overlayType && !(overlayType === "default" && primary === overlay)) {
+                else if (overlay.type !== overlayType) {
                     // Do a rebuild if the types are different.
                     rebuildRequired = true;
                 }
@@ -1135,6 +1170,11 @@
         configuration.on("change:overlayType", function(x, ot) {
             d3.select("#surface-level").classed("disabled", ot === "air_density" || ot === "wind_power_density");
         });
+        configuration.on("change:overlayType", function(x, ot) {
+            var showInfo = d3.select("#show-info");
+            if (ot === "off" && showInfo.html() !== 'info')
+                setInfo(showInfo, ot)
+        })
         configuration.on("change:surface", function(x, s) {
             d3.select("#overlay-air_density").classed("disabled", s === "surface");
             d3.select("#overlay-wind_power_density").classed("disabled", s === "surface");

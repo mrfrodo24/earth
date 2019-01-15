@@ -89,18 +89,15 @@ body {
     position: absolute;
     bottom: 3%;
     left: 2%;
+    right: 2%;
     pointer-events: none;  /* This div is just a container--do not let it interfere with operation of the map. */
 }
 
-#earth {
-    font-size: 2.4rem;
+#status, #location, #menu, #info {
+    font-size: 1.5rem;
 }
 
-#status, #location, #menu {
-    font-size: 1.75rem;
-}
-
-#status, #location, #earth {
+#status, #location, #earth, #info {
     background-color: rgba(0, 0, 5, 0.6);
     border-radius: 0.5rem/0.5rem;
     display: table;
@@ -109,7 +106,19 @@ body {
     pointer-events: all;
 }
 
+#info {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    padding: 0.5rem 1rem 0.5rem 1rem;
+}
+
+#earth {
+    font-size: 2.4rem;
+}
+
 #menu {
+    width: 700px;
     background-color: rgba(5, 10, 30, 0.85);
     border-radius: 0.5rem/0.5rem;
     overflow: hidden;
@@ -156,7 +165,19 @@ body {
     padding-top: 0.5rem;
 }
 
-#scale-label {font-size:1em;}
+#scale, #info-scale {
+    height: 18px;
+}
+#scale {
+    width: 400px;
+}
+#info-scale {
+    width: 300px;
+}
+
+#scale-label, .scale-label {font-size:1em;}
+.scale-label.scale-label-left {padding-right:10px;}
+.scale-label.scale-label-right {padding-left:10px;}
 .scale-bound {
     height: 32px;
     width: 48px;
@@ -319,4 +340,15 @@ html, body, div, span, h1, h2, h3, h4, h5, h6, p, a, svg, canvas {
         font-size: 0.8em;
     }
     .scale-bound {height:20px; width:30px; font-size:12px;}
+    #menu {
+        width: 475px;
+    }
+    #scale {
+        width: 280px;
+        height: 12px;
+    }
+    #info-scale {
+        width: 200px;
+        height: 10px;
+    }
 }
