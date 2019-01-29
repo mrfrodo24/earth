@@ -55,11 +55,12 @@ exports.uploadFile = function(path, bucket, key, metadata, predicate, cacheContr
     predicate = predicate || function() { return true; };
     var existing = headObject({Bucket: bucket, Key: key});
     var options = {
+        ACL: 'public-read',
         Bucket: bucket,
         Key: key,
         ContentType: tool.contentType(path),
         CacheControl: cacheControl(key),
-        StorageClass: "REDUCED_REDUNDANCY",  // cheaper
+        StorageClass: "STANDARD",  
         Metadata: metadata || {}
     };
 

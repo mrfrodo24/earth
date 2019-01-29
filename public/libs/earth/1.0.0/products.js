@@ -6,11 +6,17 @@
  *
  * https://github.com/cambecc/earth
  */
+
 var products = function() {
     "use strict";
 
-    var WEATHER_PATH = "/data/weather";
-    var OSCAR_PATH = "/data/oscar";
+    var wxflowConfig = { DATA_PATH: '/' }; // default path to data directory
+    if (window.WXFLOW_CONFIG) {
+        wxflowConfig = window.WXFLOW_CONFIG;
+    }
+    var WEATHER_PATH = wxflowConfig.DATA_PATH + "data/weather",
+        OSCAR_PATH = wxflowConfig.DATA_PATH + "data/oscar";
+
     var catalogs = {
         // The OSCAR catalog is an array of file names, sorted and prefixed with yyyyMMdd. Last item is the
         // most recent. For example: [ 20140101-abc.json, 20140106-abc.json, 20140112-abc.json, ... ]
