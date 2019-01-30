@@ -14,7 +14,7 @@ var AWS = require("aws-sdk");
 AWS.config.loadFromPath("../private/aws-config.json");
 var s3 = new AWS.S3();
 
-exports.S3_BUCKET = "earth-flow";
+exports.S3_BUCKET = "weather-flow";
 exports.S3_LAYER_HOME = "data/weather/";
 exports.S3_OSCAR_HOME = "data/oscar/";
 
