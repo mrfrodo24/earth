@@ -177,7 +177,7 @@ function download(product) {
     }
 
     var server = nextServer();
-    var remotePath = product.path("http://" + server);
+    var remotePath = product.path("https://" + server);
     mkdirp.sync("../tmp");
     var tempStream = temp.createWriteStream({dir: "../tmp"});
     var progress = 0;
@@ -400,7 +400,7 @@ function inspectRecentCycles(url, productType, forecasts) {
 
 function findMostRecent() {
     var server = nextServer();
-    return inspectRecentCycles("http://" + server, opt.productType, opt.firstForecasts).ensure(function() {
+    return inspectRecentCycles("https://" + server, opt.productType, opt.firstForecasts).ensure(function() {
         releaseServer(server);
     });
 }
