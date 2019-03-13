@@ -66,10 +66,25 @@ var products = function() {
     /**
      * Returns a date for the chronologically next or previous GFS data layer. How far forward or backward in time
      * to jump is determined by the step. Steps of ±1 move in 3-hour jumps, and steps of ±10 move in 24-hour jumps.
+     * Accounts for changes in sequence due to DST.
      */
     function gfsStep(date, step) {
         var offset = (step > 1 ? 8 : step < -1 ? -8 : step) * 3, adjusted = new Date(date);
+        var tzOffsetBefore = adjusted.getTimezoneOffset();
+        var oldHour = adjusted.getHours();
+        if (oldHour < 3)
+            oldHour += 24;
+        var hourShouldBe = oldHour + offset;
+        if (hourShouldBe >= 24)
+            hourShouldBe -= 24;
         adjusted.setHours(adjusted.getHours() + offset);
+        var tzOffsetAfter = adjusted.getTimezoneOffset();
+        var hourEndedUp = adjusted.getHours();
+        if (tzOffsetAfter != tzOffsetBefore) {
+            adjusted.setHours(adjusted.getHours() + (tzOffsetAfter < tzOffsetBefore ? 1 : -1));
+        } else if (hourEndedUp != hourShouldBe) {
+            adjusted.setHours(hourShouldBe - 1);
+        }
         return adjusted;
     }
 
@@ -612,8 +627,6 @@ var products = function() {
         var λ0 = header.lo1, φ0 = header.la1;  // the grid's origin (e.g., 0.0E, 90.0N)
         var Δλ = header.dx, Δφ = header.dy;    // distance between grid points (e.g., 2.5 deg lon, 2.5 deg lat)
         var ni = header.nx, nj = header.ny;    // number of grid points W-E and N-S (e.g., 144 x 73)
-        var date = new Date(header.refTime);
-        date.setHours(date.getHours() + header.forecastTime);
 
         // Scan mode 0 assumed. Longitude increases from λ0, and latitude decreases from φ0.
         // http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-4.shtml
@@ -666,7 +679,6 @@ var products = function() {
 
         return {
             source: dataSource(header),
-            date: date,
             interpolate: interpolate,
             forEachPoint: function(cb) {
                 for (var j = 0; j < nj; j++) {
