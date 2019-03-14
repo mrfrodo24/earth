@@ -56,7 +56,7 @@ var products = function() {
     function gfsDate(attr) {
         if (attr.date === "current") {
             // Construct the date from the current time, rounding down to the nearest three-hour block.
-            var now = new Date(Date.now()), hour = Math.floor(now.getUTCHours() / 3);
+            var now = new Date(Date.now()), hour = 3 * Math.floor(now.getUTCHours() / 3);
             return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), hour));
         }
         var parts = attr.date.split("/");

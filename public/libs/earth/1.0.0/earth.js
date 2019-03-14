@@ -1238,8 +1238,8 @@
             // update
             gridAgent.submit(buildGrids);
         }
-        d3.select("#scale-upper-bound").on("input", _.debounce(updateUserScale, 800));
-        d3.select("#scale-lower-bound").on("input", _.debounce(updateUserScale, 800));
+        d3.select("#scale-upper-bound").on("input", _.debounce(updateUserScale, 1200));
+        d3.select("#scale-lower-bound").on("input", _.debounce(updateUserScale, 1200));
         d3.select("#scale-reset-default").on("click", function () {
             var grid = (gridAgent.value() || {}).overlayGrid,
             overlayType = grid ? grid.type : configuration.get('overlayType');
