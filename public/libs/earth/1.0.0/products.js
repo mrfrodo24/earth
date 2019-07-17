@@ -69,22 +69,30 @@ var products = function() {
      * Accounts for changes in sequence due to DST.
      */
     function gfsStep(date, step) {
-        var offset = (step > 1 ? 8 : step < -1 ? -8 : step) * 3, adjusted = new Date(date);
-        var tzOffsetBefore = adjusted.getTimezoneOffset();
-        var oldHour = adjusted.getHours();
-        if (oldHour < 3)
+        var offset = (step > 1 ? 8 : step < -1 ? -8 : step) * 3, 
+            adjusted = new Date(date),
+            tzOffsetBefore = adjusted.getTimezoneOffset(),
+            oldHour = adjusted.getHours();
+
+        if (step < -1 || (step == -1 && oldHour < 3))
             oldHour += 24;
+        else if (step > 1)
+            oldHour -= 24;
+
         var hourShouldBe = oldHour + offset;
         if (hourShouldBe >= 24)
             hourShouldBe -= 24;
+
         adjusted.setHours(adjusted.getHours() + offset);
+
         var tzOffsetAfter = adjusted.getTimezoneOffset();
         var hourEndedUp = adjusted.getHours();
-        if (tzOffsetAfter != tzOffsetBefore) {
+
+        if (tzOffsetAfter != tzOffsetBefore)
             adjusted.setHours(adjusted.getHours() + (tzOffsetAfter < tzOffsetBefore ? 1 : -1));
-        } else if (hourEndedUp != hourShouldBe) {
+        else if (hourEndedUp != hourShouldBe)
             adjusted.setHours(hourShouldBe - 1);
-        }
+        
         return adjusted;
     }
 
