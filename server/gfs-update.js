@@ -97,8 +97,7 @@ var LAYER_RECIPES = [
 ];
 
 var servers = [
-    gfs.servers.NOMADS,
-    gfs.servers.NCEP
+    gfs.servers.NOMADS
 ];
 
 var opt = function() {
@@ -365,7 +364,7 @@ function checkProductsExist(url, dir, productType, forecasts) {
         year: dir.substr(4, 4),
         month: dir.substr(8, 2),
         day: dir.substr(10, 2),
-        hour: dir.substr(12, 2)}));
+        hour: dir.substr(13, 2)}));
 
     // build list of files we expect to exist
     var expectedFiles = forecasts.map(function(forecastHour) {
@@ -380,21 +379,52 @@ function checkProductsExist(url, dir, productType, forecasts) {
     });
 }
 
+function findHoursInRecentDays(url, dirs) {
+    // given day directories, look inside each one to see what initialization times are there
+    return _.map(dirs, function(dir) {
+        return when(scraper.fetch(url + dir)).then(function(dom) {
+            var allSubDirs = scraper.extractAttributes("a","href",dom);
+            var hourDirs = [];
+            for (var i = allSubDirs.length - 1; i >= 0; i--) {
+                var initTime = parseInt(allSubDirs[i].substr(0,2));
+                if (!isNaN(initTime) && initTime % gfs.RUN_FREQ == 0) {
+                    hourDirs.push(allSubDirs[i]);
+                }
+            }
+            var day = {};
+            day[dir] = hourDirs;
+            return day;
+        }.bind(this));
+    });
+}
+
 function inspectRecentCycles(url, productType, forecasts) {
 
     // fetch list of directories on the server and check the most recent ones for the products we require
     return when(scraper.fetch(url)).then(function(dom) {
-        var dirs = scraper.matchText(/gfs\.\d{10}\/$/, dom).map(function(n) { return n[0]; });
-        dirs = _.last(dirs.sort(), 3);  // inspect at most the last three directories, then give up.
-        var i = dirs.length;
+        var dirs = scraper.matchText(/gfs\.\d{8}\/$/, dom).map(function(n) { return n[0]; });
+        dirs = _.last(dirs.sort(), 2).reverse();  // inspect at most the last 2 days, then give up.
+        var fullDirs = findHoursInRecentDays(url, dirs);
+        return when.all(fullDirs).then(function(fullDirs) {
+            var possibleDirs = _.flatten(
+                _.map(fullDirs, function(hourDirs, dayDir) {
+                    dayDir = Object.keys(hourDirs)[0];
+                    return _.map(hourDirs[dayDir], function(hourDir) {
+                        return dayDir + hourDir;
+                    }.bind(this));
+                })
+            );
 
-        return function check() {
-            return i > 0 ?
-                checkProductsExist(url, dirs[--i], productType, forecasts).then(function(cycle) {
-                    return cycle ? cycle : check();
-                }) :
-                when.reject("cannot find most recent cycle");
-        }();
+            var i = 0;
+            return function check() {
+                return i < possibleDirs.length
+                    ? checkProductsExist(url, possibleDirs[i++], productType, forecasts)
+                        .then(function(cycle) {
+                            return cycle ? cycle : check();
+                        }) 
+                    : when.reject("cannot find most recent cycle");
+            }();
+        });
     });
 }
 

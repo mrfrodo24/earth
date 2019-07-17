@@ -26,12 +26,13 @@ var tool = require("./tool");
 
 var RUN_FREQ = 6;  // GFS cycles run every six hours, at 00, 06, 12, and 18 UTC.
 var FORECAST_FREQ = 3;  // forecast files are available in three hour increments: 00, 03, 06, ...
+exports.RUN_FREQ = RUN_FREQ;
+exports.FORECAST_FREQ = FORECAST_FREQ;
 
 /**
  * A collection of URLs describing the internet location for GFS files.
  */
 exports.servers = {
-    NCEP: "www.ftp.ncep.noaa.gov/data/nccf/com/gfs/prod/",
     NOMADS: "nomads.ncep.noaa.gov/pub/data/nccf/com/gfs/prod/"
 };
 
@@ -119,7 +120,7 @@ exports.product = function(type, cycle, forecastHour) {
         dir: function(parent) {
             var result =
                 tool.coalesce(parent, "") +
-                util.format("gfs.%s%s", tool.yyyymmdd(cycle.date()), tool.pad(cycle.hour, 2));
+                util.format("gfs.%s/%s", tool.yyyymmdd(cycle.date()), tool.pad(cycle.hour, 2));
             return (type === "master" ? result + "/master" : result) + "/";
         },
         /**
