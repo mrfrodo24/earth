@@ -3,11 +3,11 @@ earth
 
 **NOTE: the location of `dev-server.js` has changed from `{repository}/server/` to `{repository}/`**
 
-"earth" is a project to visualize global weather conditions.
+**earth** is a project to visualize global weather conditions.
 
 A customized instance of "earth" is available at http://weather-flow.environmentanalytics.com.
 
-"earth" is a project originally built by Cameron Beccario. The Environment Analytics group at NCSU have forked this project and are continually adding new features to either improve usability, add new weather products, or implement new visualization functionality. Feedback and contributions are welcome! ...especially those that clarify accepted best practices.
+[earth](https://github.com/cambecc/earth) is a project originally built by Cameron Beccario. The Environment Analytics group at NCSU have forked this project and are continually adding new features to either improve usability, add new weather products, or implement new visualization functionality. Feedback and contributions are welcome! ...especially those that clarify accepted best practices.
 
 building and launching
 ----------------------
